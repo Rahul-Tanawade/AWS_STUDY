@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+
+  pre_build:
+    commands:
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - REGION=us-east-1
+      - REPO=iris_classifier
+      - IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO
+      - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $IMAGE_URI
+
+  build:
+    commands:
+      - docker build -t $REPO .
+      - docker tag $REPO:latest $IMAGE_URI:latest
+
+  post_build:
+    commands:
+      - docker push $IMAGE_URI:latest
